@@ -24,7 +24,7 @@
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/ecdh.h>
 #include <mbedtls/error.h>
-#include <mbedtls/ssl_internal.h>
+#include <mbedtls/library/ssl_misc.h>
 
 #include <protocomm_security.h>
 #include <protocomm_security1.h>

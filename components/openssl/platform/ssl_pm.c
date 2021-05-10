@@ -23,7 +23,6 @@
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
-#include "mbedtls/certs.h"
 #include "openssl/bio.h"
 #include "openssl/err.h"
 
@@ -120,7 +119,7 @@ static int get_mbedtls_minor_ssl_version(int openssl_version_nr)
     if (TLS1_VERSION == openssl_version_nr)
         return MBEDTLS_SSL_MINOR_VERSION_1;
     // SSLv3.0 otherwise
-    return MBEDTLS_SSL_MINOR_VERSION_0;
+    return MBEDTLS_SSL_MINOR_VERSION_1;
 }
 /**
  * @brief create SSL low-level object
@@ -181,7 +180,7 @@ int ssl_pm_new(SSL *ssl)
         mbedtls_ssl_conf_min_version(&ssl_pm->conf, MBEDTLS_SSL_MAJOR_VERSION_3, get_mbedtls_minor_ssl_version(min_version));
     } else {
         mbedtls_ssl_conf_max_version(&ssl_pm->conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
-        mbedtls_ssl_conf_min_version(&ssl_pm->conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_0);
+        mbedtls_ssl_conf_min_version(&ssl_pm->conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_1);
     }
 
     if (ssl->ctx->ssl_alpn.alpn_status == ALPN_ENABLE) {

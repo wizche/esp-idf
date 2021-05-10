@@ -56,10 +56,10 @@ static int tx_buffer_len(mbedtls_ssl_context *ssl, int len)
         return MBEDTLS_SSL_OUT_BUFFER_LEN;
     } else {
         return len + MBEDTLS_SSL_HEADER_LEN
-                   + MBEDTLS_SSL_COMPRESSION_ADD
                    + MBEDTLS_MAX_IV_LENGTH
                    + MBEDTLS_SSL_MAC_ADD
-                   + MBEDTLS_SSL_PADDING_ADD;
+                   + MBEDTLS_SSL_PADDING_ADD
+                   + MBEDTLS_SSL_MAX_CID_EXPANSION;
     }
 }
 
@@ -342,7 +342,7 @@ int esp_mbedtls_add_rx_buffer(mbedtls_ssl_context *ssl)
     ssl->in_hdr = msg_head;
     ssl->in_len = msg_head + 3;
 
-    if ((ret = mbedtls_ssl_fetch_input(ssl, mbedtls_ssl_hdr_len(ssl))) != 0) {
+    if ((ret = mbedtls_ssl_fetch_input(ssl, mbedtls_ssl_in_hdr_len(ssl))) != 0) {
         if (ret == MBEDTLS_ERR_SSL_TIMEOUT) {
             ESP_LOGD(TAG, "mbedtls_ssl_fetch_input reads data times out");
         } else if (ret == MBEDTLS_ERR_SSL_WANT_READ) {
@@ -539,7 +539,7 @@ void esp_mbedtls_free_peer_cert(mbedtls_ssl_context *ssl)
 bool esp_mbedtls_ssl_is_rsa(mbedtls_ssl_context *ssl)
 {
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
-        ssl->transform_negotiate->ciphersuite_info;
+        ssl->handshake->ciphersuite_info;
 
     if (ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK) {

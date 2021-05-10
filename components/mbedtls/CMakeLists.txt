@@ -8,10 +8,11 @@ if(NOT BOOTLOADER_BUILD)
 endif()
 
 idf_component_register(SRCS "esp_crt_bundle/esp_crt_bundle.c"
-    INCLUDE_DIRS "port/include" "mbedtls/include" "esp_crt_bundle/include"
+    INCLUDE_DIRS "port/include" "mbedtls/include" "esp_crt_bundle/include" "."
     REQUIRES lwip
     PRIV_REQUIRES "${priv_requires}"
     )
+
 
 if(CONFIG_MBEDTLS_CERTIFICATE_BUNDLE)
     set(bundle_name "x509_crt_bundle")
@@ -100,6 +101,8 @@ endif()
 
 # Add port files to mbedtls targets
 target_sources(mbedtls PRIVATE ${mbedtls_target_sources})
+target_compile_options(mbedtls PUBLIC -Wno-format)
+target_compile_options(mbedcrypto PUBLIC -Wno-format)
 
 # Choose perihperal type
 if(CONFIG_IDF_TARGET_ESP32)
