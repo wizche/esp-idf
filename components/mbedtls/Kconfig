@@ -524,16 +524,6 @@ menu "mbedTLS"
             Support the legacy SSL 3.0 protocol. Most servers will speak a newer
             TLS protocol these days.
 
-    config MBEDTLS_SSL_PROTO_TLS1
-        bool "Support TLS 1.0 protocol"
-        depends on MBEDTLS_TLS_ENABLED
-        default y
-
-    config MBEDTLS_SSL_PROTO_TLS1_1
-        bool "Support TLS 1.1 protocol"
-        depends on MBEDTLS_TLS_ENABLED
-        default y
-
     config MBEDTLS_SSL_PROTO_TLS1_2
         bool "Support TLS 1.2 protocol"
         depends on MBEDTLS_TLS_ENABLED
@@ -549,9 +539,8 @@ menu "mbedTLS"
     config MBEDTLS_SSL_PROTO_DTLS
         bool "Support DTLS protocol (all versions)"
         default n
-        depends on MBEDTLS_SSL_PROTO_TLS1_1 || MBEDTLS_SSL_PROTO_TLS1_2
+        depends on MBEDTLS_SSL_PROTO_TLS1_2
         help
-            Requires TLS 1.1 to be enabled for DTLS 1.0
             Requires TLS 1.2 to be enabled for DTLS 1.2
 
     config MBEDTLS_SSL_ALPN
