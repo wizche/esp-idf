@@ -1145,14 +1145,6 @@
  */
 #define MBEDTLS_SSL_SERVER_NAME_INDICATION
 
-/**
- * \def MBEDTLS_SSL_TRUNCATED_HMAC
- *
- * Enable support for RFC 6066 truncated HMAC in SSL.
- *
- * Comment this macro to disable support for truncated HMAC in SSL
- */
-#define MBEDTLS_SSL_TRUNCATED_HMAC
 
 /**
  * \def MBEDTLS_VERSION_FEATURES
