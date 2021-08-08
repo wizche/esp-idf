@@ -26,11 +26,7 @@
  *  http://www.itl.nist.gov/fipspubs/fip180-1.htm
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include <mbedtls/build_info.h>
 
 #if defined(MBEDTLS_SHA1_C) && defined(MBEDTLS_SHA1_ALT)
 
