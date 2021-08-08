@@ -883,22 +883,6 @@
 #undef MBEDTLS_SSL_EXTENDED_MASTER_SECRET
 #endif
 
-/**
- * \def MBEDTLS_SSL_FALLBACK_SCSV
- *
- * Enable support for FALLBACK_SCSV (draft-ietf-tls-downgrade-scsv-00).
- *
- * For servers, it is recommended to always enable this, unless you support
- * only one version of TLS, or know for sure that none of your clients
- * implements a fallback strategy.
- *
- * For clients, you only need this if you're using a fallback strategy, which
- * is not recommended in the first place, unless you absolutely need it to
- * interoperate with buggy (version-intolerant) servers.
- *
- * Comment this macro to disable support for FALLBACK_SCSV
- */
-#define MBEDTLS_SSL_FALLBACK_SCSV
 
 /**
  * \def MBEDTLS_SSL_PROTO_TLS1
@@ -914,38 +898,6 @@
 #define MBEDTLS_SSL_PROTO_TLS1
 #else
 #undef MBEDTLS_SSL_PROTO_TLS1
-#endif
-
-/**
- * \def MBEDTLS_SSL_PROTO_SSL3
- *
- * Enable support for SSL 3.0.
- *
- * Requires: MBEDTLS_MD5_C
- *           MBEDTLS_SHA1_C
- *
- * Comment this macro to disable support for SSL 3.0
- */
-#ifdef CONFIG_MBEDTLS_SSL_PROTO_SSL3
-#define MBEDTLS_SSL_PROTO_SSL3
-#else
-#undef MBEDTLS_SSL_PROTO_SSL3
-#endif
-
-/**
- * \def MBEDTLS_SSL_CBC_RECORD_SPLITTING
- *
- * Enable 1/n-1 record splitting for CBC mode in SSLv3 and TLS 1.0.
- *
- * This is a countermeasure to the BEAST attack, which also minimizes the risk
- * of interoperability issues compared to sending 0-length records.
- *
- * Comment this macro to disable 1/n-1 record splitting.
- */
-#if defined(MBEDTLS_SSL_PROTO_SSL3) || defined(MBEDTLS_SSL_PROTO_TLS1)
-#define MBEDTLS_SSL_CBC_RECORD_SPLITTING
-#else
-#undef MBEDTLS_SSL_CBC_RECORD_SPLITTING
 #endif
 
 /**
@@ -1092,21 +1044,6 @@
 #endif
 
 /**
- * \def MBEDTLS_SSL_DTLS_BADMAC_LIMIT
- *
- * Enable support for a limit of records with bad MAC.
- *
- * See mbedtls_ssl_conf_dtls_badmac_limit().
- *
- * Requires: MBEDTLS_SSL_PROTO_DTLS
- */
-#ifdef CONFIG_MBEDTLS_SSL_PROTO_DTLS
-#define MBEDTLS_SSL_DTLS_BADMAC_LIMIT
-#else
-#undef MBEDTLS_SSL_DTLS_BADMAC_LIMIT
-#endif
-
-/**
  * \def MBEDTLS_SSL_SESSION_TICKETS
  *
  * Enable support for RFC 5077 session tickets in SSL.
@@ -1159,40 +1096,6 @@
  */
 #define MBEDTLS_VERSION_FEATURES
 
-/**
- * \def MBEDTLS_X509_CHECK_KEY_USAGE
- *
- * Enable verification of the keyUsage extension (CA and leaf certificates).
- *
- * Disabling this avoids problems with mis-issued and/or misused
- * (intermediate) CA and leaf certificates.
- *
- * \warning Depending on your PKI use, disabling this can be a security risk!
- *
- * Comment to skip keyUsage checking for both CA and leaf certificates.
- */
-#ifdef CONFIG_MBEDTLS_X509_CHECK_KEY_USAGE
-#define MBEDTLS_X509_CHECK_KEY_USAGE
-#else
-#undef MBEDTLS_X509_CHECK_KEY_USAGE
-#endif
-
-/**
- * \def MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
- *
- * Enable verification of the extendedKeyUsage extension (leaf certificates).
- *
- * Disabling this avoids problems with mis-issued and/or misused certificates.
- *
- * \warning Depending on your PKI use, disabling this can be a security risk!
- *
- * Comment to skip extendedKeyUsage checking for certificates.
- */
-#ifdef CONFIG_MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
-#define MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
-#else
-#undef MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
-#endif
 
 /**
  * \def MBEDTLS_X509_RSASSA_PSS_SUPPORT
