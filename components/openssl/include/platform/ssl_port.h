@@ -21,6 +21,7 @@
 
 #include "esp_types.h"
 #include "esp_log.h"
+#include "esp_system.h"
 #include "string.h"
 #include "malloc.h"
 

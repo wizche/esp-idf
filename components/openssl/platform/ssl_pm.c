@@ -25,6 +25,8 @@
 #include "mbedtls/error.h"
 #include "openssl/bio.h"
 #include "openssl/err.h"
+// FIXME: Support for TLS v1.0 and v1.1 has been dropped from mbedTLS v3.0+ (Line 119 | 185)
+#include "mbedtls/library/ssl_misc.h"
 
 #define X509_INFO_STRING_LENGTH 8192
 
@@ -119,7 +121,14 @@ static int get_mbedtls_minor_ssl_version(int openssl_version_nr)
     if (TLS1_VERSION == openssl_version_nr)
         return MBEDTLS_SSL_MINOR_VERSION_1;
     // SSLv3.0 otherwise
+    // NOTE: SSLv3.0 deprecated, v3.1 is the oldest version that can be used
     return MBEDTLS_SSL_MINOR_VERSION_1;
+}
+
+int ssl_rng(void *data, unsigned char *output, size_t len)
+{
+    esp_fill_random(output, len);
+    return 0;
 }
 /**
  * @brief create SSL low-level object
@@ -312,10 +321,10 @@ static int mbedtls_handshake( mbedtls_ssl_context *ssl )
 {
     int ret = 0;
 
-    while (ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER) {
+    while (ssl->MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER) {
         ret = mbedtls_ssl_handshake_step(ssl);
 
-        SSL_DEBUG(SSL_PLATFORM_DEBUG_LEVEL, "ssl ret %d state %d", ret, ssl->state);
+        SSL_DEBUG(SSL_PLATFORM_DEBUG_LEVEL, "ssl ret %d state %d", ret, ssl->MBEDTLS_PRIVATE(state));
 
         if (ret != 0)
             break;
@@ -441,7 +450,7 @@ void ssl_pm_set_fd(SSL *ssl, int fd, int mode)
 {
     struct ssl_pm *ssl_pm = (struct ssl_pm *)ssl->ssl_pm;
 
-    ssl_pm->fd.fd = fd;
+    ssl_pm->fd.MBEDTLS_PRIVATE(fd) = fd;
 }
 
 void ssl_pm_set_hostname(SSL *ssl, const char *hostname)
@@ -455,7 +464,7 @@ int ssl_pm_get_fd(const SSL *ssl, int mode)
 {
     struct ssl_pm *ssl_pm = (struct ssl_pm *)ssl->ssl_pm;
 
-    return ssl_pm->fd.fd;
+    return ssl_pm->fd.MBEDTLS_PRIVATE(fd);
 }
 
 OSSL_HANDSHAKE_STATE ssl_pm_get_state(const SSL *ssl)
@@ -464,7 +473,7 @@ OSSL_HANDSHAKE_STATE ssl_pm_get_state(const SSL *ssl)
 
     struct ssl_pm *ssl_pm = (struct ssl_pm *)ssl->ssl_pm;
 
-    switch (ssl_pm->ssl.state)
+    switch (ssl_pm->ssl.MBEDTLS_PRIVATE(state))
     {
         case MBEDTLS_SSL_CLIENT_HELLO:
             state = TLS_ST_CW_CLNT_HELLO;
@@ -714,7 +723,7 @@ int pkey_pm_load(EVP_PKEY *pk, const unsigned char *buffer, int len)
 
     mbedtls_pk_init(pkey_pm->pkey);
 
-    ret = mbedtls_pk_parse_key(pkey_pm->pkey, load_buf, len + 1, NULL, 0);
+    ret = mbedtls_pk_parse_key(pkey_pm->pkey, load_buf, len + 1, NULL, 0, ssl_rng, NULL);
     ssl_mem_free(load_buf);
 
     if (ret) {

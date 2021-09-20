@@ -461,7 +461,7 @@ static void tls_set_ciphersuite(const struct tls_connection_params *cfg, tls_con
 	if (tls->ciphersuite[0]) {
 		mbedtls_ssl_conf_ciphersuites(&tls->conf, tls->ciphersuite);
 	} else if (mbedtls_pk_get_bitlen(&tls->clientkey) > 2048 ||
-		(tls->cacert_ptr && mbedtls_pk_get_bitlen(&tls->cacert_ptr->pk) > 2048)) {
+		(tls->cacert_ptr && mbedtls_pk_get_bitlen(&tls->cacert_ptr->MBEDTLS_PRIVATE(pk)) > 2048)) {
 		mbedtls_ssl_conf_ciphersuites(&tls->conf, eap_ciphersuite_preference);
 	}
 }
@@ -650,11 +650,11 @@ struct wpabuf * tls_connection_handshake(void *tls_ctx,
 	}
 
 	/* Multiple reads */
-	while (tls->ssl.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
-		if (tls->ssl.state == MBEDTLS_SSL_CLIENT_CERTIFICATE) {
+	while (tls->ssl.MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER) {
+		if (tls->ssl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_CLIENT_CERTIFICATE) {
 			/* Read random data before session completes, not present after handshake */
-			if (tls->ssl.handshake) {
-				os_memcpy(conn->randbytes, tls->ssl.handshake->randbytes,
+			if (tls->ssl.MBEDTLS_PRIVATE(handshake)) {
+				os_memcpy(conn->randbytes, tls->ssl.MBEDTLS_PRIVATE(handshake)->randbytes,
 					  TLS_RANDOM_LEN * 2);
 			}
 		}
@@ -767,8 +767,8 @@ struct wpabuf * tls_connection_decrypt(void *tls_ctx,
 
 int tls_connection_resumed(void *tls_ctx, struct tls_connection *conn)
 {
-	if (conn && conn->tls && conn->tls->ssl.handshake) {
-		return conn->tls->ssl.handshake->resume;
+	if (conn && conn->tls && conn->tls->ssl.MBEDTLS_PRIVATE(handshake)) {
+		return conn->tls->ssl.MBEDTLS_PRIVATE(handshake)->resume;
 	}
 
 	return 0;
@@ -924,10 +924,10 @@ static int tls_connection_prf(void *tls_ctx, struct tls_connection *conn,
 	wpa_hexdump_key(MSG_MSGDUMP, "random", seed, 2 * TLS_RANDOM_LEN);
 	wpa_hexdump_key(MSG_MSGDUMP, "master", ssl->MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(master), TLS_MASTER_SECRET_LEN);
 
-	if (ssl->MBEDTLS_PRIVATE(handshake)->MBEDTLS_PRIVATE(ciphersuite_info)->mac == MBEDTLS_MD_SHA384) {
+	if (ssl->MBEDTLS_PRIVATE(handshake)->ciphersuite_info->MBEDTLS_PRIVATE(mac) == MBEDTLS_MD_SHA384) {
 		ret = tls_prf_sha384(ssl->MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(master), TLS_MASTER_SECRET_LEN,
 				label, seed, 2 * TLS_RANDOM_LEN, out, out_len);
-	} else if (ssl->MBEDTLS_PRIVATE(handshake)->MBEDTLS_PRIVATE(ciphersuite_info)->mac == MBEDTLS_MD_SHA256) {
+	} else if (ssl->MBEDTLS_PRIVATE(handshake)->ciphersuite_info->MBEDTLS_PRIVATE(mac) == MBEDTLS_MD_SHA256) {
 		ret = tls_prf_sha256(ssl->MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(master), TLS_MASTER_SECRET_LEN,
 				label, seed, 2 * TLS_RANDOM_LEN, out, out_len);
 	} else {
