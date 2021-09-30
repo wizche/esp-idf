@@ -13,7 +13,6 @@ idf_component_register(SRCS "esp_crt_bundle/esp_crt_bundle.c"
     PRIV_REQUIRES "${priv_requires}"
     )
 
-
 if(CONFIG_MBEDTLS_CERTIFICATE_BUNDLE)
     set(bundle_name "x509_crt_bundle")
     set(DEFAULT_CRT_DIR ${COMPONENT_DIR}/esp_crt_bundle)
@@ -209,12 +208,57 @@ set_property(TARGET mbedcrypto APPEND PROPERTY LINK_INTERFACE_LIBRARIES mbedtls)
 set_property(TARGET mbedcrypto APPEND PROPERTY LINK_LIBRARIES idf::driver idf::${target})
 set_property(TARGET mbedcrypto APPEND PROPERTY INTERFACE_LINK_LIBRARIES idf::driver idf::${target})
 
+# ERROR: CMake Error: install(EXPORT "A" ...) includes target "b"
+#       which requires target "c" that is not in any export set.
+# NOTE: Here b => idf targets; c => mbedtls targets
+# If target c depends on target b, and target c is exported, cmake checks that
+# target b is exported too. This is necessary so cmake can put the name of the
+# exported "b" library into the dependencies of c.
+# This is possible if b is exported in the same export set as c, or if b is in a
+# different export set, but only in one. Then cmake can use the name of the
+# exported target b as it is used in the other export set.
+# If b is exported in multiple export sets, each of these export sets can use a
+# different namespace, and it is not clear which of these different names for b
+# should be used as dependency for c.
+# If b is in only one export set, it will be used with the namespace as used
+# there in the list of dependencies of c.
+
+# FIX: 1 - Trying to link the required libraries to the mbedtls targets
+# ERROR: In "port/include/mbedtls/esp_config.h": No such file or directory => #include "soc/soc_caps.h"
+# set_target_properties(
+#     mbedtls PROPERTIES
+#     LINK_LIBRARIES idf
+#     INTERFACE_LINK_LIBRARIES idf)
+
+# set(INTERFACE_LINK_crypto_LIST "mbedtls" "idf")
+# set_target_properties(
+#     mbedcrypto PROPERTIES
+#     LINK_LIBRARIES idf
+#     INTERFACE_LINK_LIBRARIES INTERFACE_LINK_crypto_LIST)
+
+# set_target_properties(
+#     mbedx509 PROPERTIES
+#     LINK_LIBRARIES idf
+#     INTERFACE_LINK_LIBRARIES idf)
+
+# FIX: 2 - Trying to import the exported mbedtls targets here and then link the required libraries
+# ERROR: Same as base version: CMake Error: install(EXPORT "MbedTLSTargets" ...) includes target "mbedYYY"
+#                              which requires target "__idf_YYY" that is not in any export set.
+# add_library(MbedTLS::mbedcrypto IMPORTED STATIC)
+# add_library(MbedTLS::mbedx509 IMPORTED STATIC)
+# add_library(MbedTLS::mbedtls IMPORTED STATIC)
+
+# target_link_libraries(MbedTLS::mbedcrypto INTERFACE "To-be-added")
+# target_link_libraries(MbedTLS::mbedx509 INTERFACE "To-be-added")
+# target_link_libraries(MbedTLS::mbedtls INTERFACE "To-be-added")
+
 # Link mbedtls libraries to component library
 target_link_libraries(${COMPONENT_LIB} PUBLIC ${mbedtls_targets})
 
 if(CONFIG_ESP_TLS_USE_DS_PERIPHERAL)
     # Link target (e.g. esp32s2) library to component library
     idf_component_get_property(target_lib ${target} COMPONENT_LIB)
+    message("${target_lib}")
     set_property(TARGET mbedcrypto APPEND PROPERTY INTERFACE_LINK_LIBRARIES $<LINK_ONLY:${target_lib}>)
     # The linker seems to be unable to resolve all the dependencies without increasing this
     set_property(TARGET mbedcrypto APPEND PROPERTY LINK_INTERFACE_MULTIPLICITY 6)
