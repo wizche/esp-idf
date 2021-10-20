@@ -1554,6 +1554,7 @@ components/mbedtls/port/aes/dma/include/esp_aes_dma_priv.h
 components/mbedtls/port/aes/esp_aes_common.c
 components/mbedtls/port/aes/esp_aes_gcm.c
 components/mbedtls/port/aes/esp_aes_xts.c
+components/mbedtls/port/certs.c
 components/mbedtls/port/crypto_shared_gdma/esp_crypto_shared_gdma.c
 components/mbedtls/port/dynamic/esp_mbedtls_dynamic_impl.h
 components/mbedtls/port/dynamic/esp_ssl_cli.c
@@ -1584,6 +1585,7 @@ components/mbedtls/port/include/esp_ds/esp_rsa_sign_alt.h
 components/mbedtls/port/include/esp_mem.h
 components/mbedtls/port/include/gcm_alt.h
 components/mbedtls/port/include/mbedtls/bignum.h
+components/mbedtls/port/include/mbedtls/certs.h
 components/mbedtls/port/include/mbedtls/esp_config.h
 components/mbedtls/port/include/mbedtls/esp_debug.h
 components/mbedtls/port/include/md/esp_md.h
