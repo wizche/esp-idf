@@ -121,7 +121,6 @@ void mbedtls_sha1_process( mbedtls_sha1_context *ctx,
 {
     mbedtls_internal_sha1_process( ctx, data );
 }
-#
 
 int mbedtls_sha1__update( mbedtls_sha1_context *ctx, const unsigned char *input, size_t ilen )
 {
