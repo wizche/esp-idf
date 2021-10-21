@@ -545,6 +545,7 @@ components/bt/host/nimble/port/src/esp_nimble_mem.c
 components/bt/test/test_bt_common.c
 components/bt/test/test_smp.c
 components/cbor/port/include/cbor.h
+components/coap/port/coap_mbedtls.c
 components/coap/port/include/coap3/coap.h
 components/coap/port/include/coap_config.h
 components/coap/port/include/coap_config_posix.h

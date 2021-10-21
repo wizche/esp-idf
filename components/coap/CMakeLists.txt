@@ -18,7 +18,7 @@ set(srcs
     "libcoap/src/coap_event.c"
     "libcoap/src/coap_hashkey.c"
     "libcoap/src/coap_io.c"
-    "libcoap/src/coap_mbedtls.c"
+    "port/coap_mbedtls.c"
     "libcoap/src/coap_notls.c"
     "libcoap/src/coap_prng.c"
     "libcoap/src/coap_session.c"
