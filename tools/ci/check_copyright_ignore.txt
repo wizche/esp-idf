@@ -1568,7 +1568,6 @@ components/mbedtls/port/esp32h2/bignum.c
 components/mbedtls/port/esp32s2/bignum.c
 components/mbedtls/port/esp32s3/bignum.c
 components/mbedtls/port/esp_bignum.c
-components/mbedtls/port/esp_ds/esp_rsa_sign_alt.c
 components/mbedtls/port/esp_hardware.c
 components/mbedtls/port/esp_mem.c
 components/mbedtls/port/esp_timing.c
@@ -1583,7 +1582,6 @@ components/mbedtls/port/include/esp32s2/aes.h
 components/mbedtls/port/include/esp32s2/gcm.h
 components/mbedtls/port/include/esp32s2/sha.h
 components/mbedtls/port/include/esp_crypto_shared_gdma.h
-components/mbedtls/port/include/esp_ds/esp_rsa_sign_alt.h
 components/mbedtls/port/include/esp_mem.h
 components/mbedtls/port/include/gcm_alt.h
 components/mbedtls/port/include/mbedtls/bignum.h
