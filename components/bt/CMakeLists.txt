@@ -458,6 +458,7 @@ if(CONFIG_BT_ENABLED)
                     host/nimble/nimble/nimble/host/services/ipss/include
                     host/nimble/nimble/nimble/host/services/lls/include
                     host/nimble/nimble/nimble/host/services/tps/include
+                    host/nimble/nimble/nimble/host/src
                     host/nimble/nimble/nimble/host/util/include
                     host/nimble/nimble/nimble/host/store/ram/include
                     host/nimble/nimble/nimble/host/store/config/include
@@ -507,7 +508,7 @@ if(CONFIG_BT_ENABLED)
                     "host/nimble/nimble/nimble/host/src/ble_gatts_lcl.c"
                     "host/nimble/nimble/nimble/host/src/ble_ibeacon.c"
                     "host/nimble/nimble/nimble/host/src/ble_hs_atomic.c"
-                    "host/nimble/nimble/nimble/host/src/ble_sm_alg.c"
+                    "host/nimble/port/src/ble_sm_alg.c"
                     "host/nimble/nimble/nimble/host/src/ble_hs_stop.c"
                     "host/nimble/nimble/nimble/host/src/ble_hs.c"
                     "host/nimble/nimble/nimble/host/src/ble_hs_hci_evt.c"

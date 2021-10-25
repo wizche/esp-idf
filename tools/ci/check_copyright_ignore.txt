@@ -541,6 +541,7 @@ components/bt/host/nimble/esp-hci/src/esp_nimble_hci.c
 components/bt/host/nimble/port/include/console/console.h
 components/bt/host/nimble/port/include/esp_nimble_cfg.h
 components/bt/host/nimble/port/include/esp_nimble_mem.h
+components/bt/host/nimble/port/src/ble_sm_alg.c
 components/bt/host/nimble/port/src/esp_nimble_mem.c
 components/bt/test/test_bt_common.c
 components/bt/test/test_smp.c
