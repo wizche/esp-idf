@@ -1559,9 +1559,6 @@ components/mbedtls/port/aes/esp_aes_xts.c
 components/mbedtls/port/certs.c
 components/mbedtls/port/crypto_shared_gdma/esp_crypto_shared_gdma.c
 components/mbedtls/port/dynamic/esp_mbedtls_dynamic_impl.h
-components/mbedtls/port/dynamic/esp_ssl_cli.c
-components/mbedtls/port/dynamic/esp_ssl_srv.c
-components/mbedtls/port/dynamic/esp_ssl_tls.c
 components/mbedtls/port/esp32/bignum.c
 components/mbedtls/port/esp32c3/bignum.c
 components/mbedtls/port/esp32h2/bignum.c
@@ -1612,17 +1609,12 @@ components/mbedtls/port/sha/parallel_engine/esp_sha256.c
 components/mbedtls/port/sha/parallel_engine/esp_sha512.c
 components/mbedtls/port/sha/parallel_engine/sha.c
 components/mbedtls/test/test_aes.c
-components/mbedtls/test/test_aes_gcm.c
 components/mbedtls/test/test_aes_perf.c
 components/mbedtls/test/test_aes_sha_parallel.c
 components/mbedtls/test/test_apb_dport_access.c
 components/mbedtls/test/test_apb_dport_access.h
-components/mbedtls/test/test_ecp.c
-components/mbedtls/test/test_esp_crt_bundle.c
 components/mbedtls/test/test_mbedtls.c
-components/mbedtls/test/test_mbedtls_mpi.c
 components/mbedtls/test/test_mbedtls_sha.c
-components/mbedtls/test/test_rsa.c
 components/mbedtls/test/test_sha_perf.c
 components/mdns/host_test/components/esp_event_mock/esp_event_mock.c
 components/mdns/host_test/components/esp_event_mock/include/esp_event.h
@@ -1832,7 +1824,6 @@ components/protocomm/src/security/security0.c
 components/protocomm/src/security/security1.c
 components/protocomm/src/transports/protocomm_console.c
 components/protocomm/src/transports/protocomm_httpd.c
-components/protocomm/test/test_protocomm.c
 components/pthread/include/esp_pthread.h
 components/pthread/pthread_cond_var.c
 components/pthread/pthread_internal.h
@@ -2804,7 +2795,6 @@ components/wpa_supplicant/src/wps/wps_enrollee.c
 components/wpa_supplicant/src/wps/wps_i.h
 components/wpa_supplicant/src/wps/wps_registrar.c
 components/wpa_supplicant/src/wps/wps_validate.c
-components/wpa_supplicant/test/test_crypto.c
 components/wpa_supplicant/test/test_dpp.c
 components/wpa_supplicant/test/test_offchannel.c
 components/wpa_supplicant/test/test_sae.c
