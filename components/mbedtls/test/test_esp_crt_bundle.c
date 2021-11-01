@@ -2,8 +2,7 @@
  *
  * Adapted from the ssl_server example in mbedtls.
  *
- * SPDX-FileCopyrightText: 2006-2015, ARM Limited, All Rights Reserved
-*                          2021 The Mbed TLS Contributors
+ * SPDX-FileCopyrightText: The Mbed TLS Contributors
  *
  * SPDX-License-Identifier: Apache 2.0 License
  *

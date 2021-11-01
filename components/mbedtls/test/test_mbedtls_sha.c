@@ -1,6 +1,9 @@
 /* mbedTLS SHA unit tests
+ *
+ * SPDX-FileCopyrightText: 2016-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
