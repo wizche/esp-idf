@@ -1,4 +1,3 @@
-#include <sys/cdefs.h>
 /* Non-Mesh Communication Example
 
    This example code is in the Public Domain (or CC0 licensed, at your option.)
@@ -18,13 +17,12 @@
 #include "esp_log.h"
 #include "esp_mesh.h"
 #include "nvs_flash.h"
-
+#include "config.h"
 
 /*******************************************************
  *                Macros
  *******************************************************/
 
-#define MAC_ADDR_LEN (6u)
 /*******************************************************
  *                Constants
  *******************************************************/
@@ -44,18 +42,17 @@ const esp_netif_ip_info_t g_nonmesh_netif_subnet_ip = {        // mesh subnet IP
  *                Variable Definitions
  *******************************************************/
 static const char *MESH_TAG = "mesh_main";
-static const uint8_t MESH_ID[6] = {0x77, 0x77, 0x77, 0x77, 0x77, 0x77};
 static mesh_addr_t mesh_parent_addr;
 static int mesh_layer = -1;
 static esp_netif_t *netif_sta = NULL;
 static esp_netif_t *netif_ap = NULL;
 static esp_console_repl_t *s_repl = NULL;
-static esp_ip4_addr_t s_current_ip;
 
 /*******************************************************
  *                Function Declarations
  *******************************************************/
 void register_ping_command(void);
+void mqtt_app_start(void);
 
 /*******************************************************
  *                Function Definitions
@@ -318,7 +315,6 @@ void ip_event_handler(void *arg, esp_event_base_t event_base,
     char netif_name[3];
     esp_netif_get_netif_impl_name(event->esp_netif, netif_name);
     ESP_LOGI(MESH_TAG, "<IP_EVENT_STA_GOT_IP> netif %s IP:" IPSTR, netif_name,IP2STR(&event->ip_info.ip));
-    s_current_ip.addr = event->ip_info.ip.addr;
 
     esp_netif_dns_info_t dns;
     ESP_ERROR_CHECK(esp_netif_get_dns_info(event->esp_netif, ESP_NETIF_DNS_MAIN, &dns));
@@ -336,27 +332,6 @@ void ip_event_handler(void *arg, esp_event_base_t event_base,
         ip_napt_enable(g_nonmesh_netif_subnet_ip.ip.addr, 1);
         esp_netif_dhcps_start(netif_ap);
         ESP_LOGI(MESH_TAG, "[NODE] DHCP Server for network " IPSTR " on AP started!", IP2STR(&g_nonmesh_netif_subnet_ip.ip));
-    }
-}
-
-_Noreturn static void print_stats(void *args) {
-    while (1) {
-        uint8_t apmac[MAC_ADDR_LEN];
-        uint8_t stamac[MAC_ADDR_LEN];
-        esp_wifi_get_mac(WIFI_IF_AP, apmac);
-        esp_wifi_get_mac(WIFI_IF_STA, stamac);
-        ESP_LOGI(MESH_TAG,
-                 "[%s] LAYER: %1d | TYPE: %1d | MESH_SSID: ESPM_%2X%2X%2X | TOPO: %s | NODE#: %d | IP:" IPSTR " | AP: " MACSTR " | STA: " MACSTR,
-                 esp_mesh_is_root() ? "ROOT" : "NODE", esp_mesh_get_layer(), esp_mesh_get_type(), stamac[3], stamac[4],
-                 stamac[5],
-                 esp_mesh_get_topology() == MESH_TOPO_TREE ? "tree" : "chain", esp_mesh_get_total_node_num(),
-                 IP2STR(&s_current_ip), MAC2STR(apmac), MAC2STR(stamac));
-        struct netif *netif;
-        NETIF_FOREACH(netif) {
-            ESP_LOGI(MESH_TAG, "Interface %s, NAPT: %d, IPv4: " IPSTR, netif->name, netif->napt,
-                     IP2STR(&netif->ip_addr.u_addr.ip4));
-        }
-        vTaskDelay(1000 / portTICK_RATE_MS);
     }
 }
 
@@ -411,8 +386,6 @@ void app_main(void) {
              esp_mesh_is_root_fixed() ? "root fixed" : "root not fixed",
              esp_mesh_get_topology(), esp_mesh_get_topology() ? "(chain)" : "(tree)", esp_mesh_is_ps_enabled());
 
-    xTaskCreate(print_stats, "print_stats", 3072, NULL, 5, NULL);
-
     // configure console
     esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
     // install console REPL environment
@@ -424,6 +397,8 @@ void app_main(void) {
 
     //esp_log_level_set("mesh_hexdump", ESP_LOG_VERBOSE);
     //esp_log_level_set("mesh_main", ESP_LOG_INFO);
+
+    mqtt_app_start();
 
     // start console REPL
     ESP_ERROR_CHECK(esp_console_start_repl(s_repl));
