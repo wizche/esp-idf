@@ -6,10 +6,6 @@ Basically it provides internet access via every node hidden SSID (`ESPM_XXYYZZ` 
 
 ![nonmesh architecture](docs/esp_mesh_architecture_v2.png)
 
-## Limitations
-* Non-mesh clients gets disconnected probably because of `esp_mesh_set_ap_assoc_expire` timer
-* Unstable performance (see the 3-layer iPerf test below) sometimes starting the iPerf client make the connectivity drops completely (not even a ping) which is later then restore
-
 ## Perf
 
 ### WiFi iPerf client (directly connected to router SSID)
@@ -230,4 +226,9 @@ Connecting to host 192.168.1.107, port 5201
 [ ID] Interval           Transfer     Bandwidth
 [  4]   0.00-10.00  sec  2.42 MBytes  2.03 Mbits/sec                  sender
 [  4]   0.00-10.00  sec  2.33 MBytes  1.95 Mbits/sec                  receiver
+```
+## TLS
+To generate the PEM certificate used for TLS validation
+```
+openssl s_client -showcerts -connect mqtt.eclipseprojects.io:8883 </dev/null 2>/dev/null|openssl x509 -outform PEM >mqtt_eclipse_org.pem
 ```

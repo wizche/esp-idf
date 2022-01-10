@@ -12,19 +12,22 @@
 #include "mqtt_client.h"
 #include "cJSON.h"
 
+extern const char mqtt_eclipse_org_pem_start[]   asm("_binary_mqtt_eclipseprojects_io_pem_start");
+extern const char mqtt_eclipse_org_pem_end[]   asm("_binary_mqtt_eclipseprojects_io_pem_end");
+
 static const char *TAG = "mesh_mqtt";
 static esp_mqtt_client_handle_t s_client = NULL;
 
+static bool mqtt_app_running = false;
+
+static void print_stats(void *args);
 static char *build_json_message();
 
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-            if (esp_mqtt_client_subscribe(s_client, TOPIC, 0) < 0) {
-                // Disconnect to retry the subscribe after auto-reconnect timeout
-                esp_mqtt_client_disconnect(s_client);
-            }
+            xTaskCreate(print_stats, "print_stats", 3072, NULL, 5, NULL);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -122,7 +125,7 @@ static char *build_json_message() {
     }
     // mesh-id
     char *meshid;
-    asprintf(&meshid, "%2X%2X%2X%2X%2X%2X",
+    asprintf(&meshid, "%2X:%2X:%2X:%2X:%2X:%2X",
              MESH_ID[0], MESH_ID[1], MESH_ID[2], MESH_ID[3], MESH_ID[4], MESH_ID[5]);
     if (cJSON_AddStringToObject(info, "mesh_id", meshid) == NULL) {
         free(meshid);
@@ -138,6 +141,51 @@ static char *build_json_message() {
     // HEAP free
     if (cJSON_AddNumberToObject(info, "heap_free", esp_get_free_heap_size()) == NULL) {
         goto end;
+    }
+
+    // STA clients
+    cJSON *clients = cJSON_CreateArray();
+    if (clients == NULL)
+    {
+        goto end;
+    }
+    cJSON_AddItemToObject(info, "clients", clients);
+
+    wifi_sta_list_t wifi_sta_list;
+    tcpip_adapter_sta_list_t adapter_sta_list;
+    memset(&wifi_sta_list, 0, sizeof(wifi_sta_list));
+    memset(&adapter_sta_list, 0, sizeof(adapter_sta_list));
+
+    esp_wifi_ap_get_sta_list(&wifi_sta_list);
+    tcpip_adapter_get_sta_list(&wifi_sta_list, &adapter_sta_list);
+    cJSON *client;
+    for (int i = 0; i < adapter_sta_list.num; i++) {
+        client = cJSON_CreateObject();
+        if (client == NULL)
+        {
+            goto end;
+        }
+        cJSON_AddItemToArray(clients, client);
+        tcpip_adapter_sta_info_t station = adapter_sta_list.sta[i];
+        char *client_ip;
+        asprintf(&client_ip, IPSTR, IP2STR(&station.ip));
+        if (cJSON_AddStringToObject(client, "ip", client_ip) == NULL) {
+            free(client_ip);
+            goto end;
+        }
+        free(client_ip);
+
+        char *client_mac;
+        asprintf(&client_mac, MACSTR, MAC2STR(station.mac));
+        if (cJSON_AddStringToObject(client, "mac", client_mac) == NULL) {
+            free(client_mac);
+            goto end;
+        }
+        free(client_mac);
+
+        if (cJSON_AddNumberToObject(client, "rssi", wifi_sta_list.sta[i].rssi) == NULL) {
+            goto end;
+        }
     }
 
     // Serialize
@@ -170,13 +218,22 @@ static void print_stats(void *args) {
 }
 
 void mqtt_app_start(void) {
+    if(mqtt_app_running){
+        ESP_LOGI(TAG, "MQTT already connected, skipping!");
+        return;
+    }
+
     esp_mqtt_client_config_t mqtt_cfg = {
             .uri = MQTT_SERVER,
+            .cert_pem = (const char *)mqtt_eclipse_org_pem_start,
     };
 
     s_client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_register_event(s_client, ESP_EVENT_ANY_ID, mqtt_event_handler, s_client);
-    esp_mqtt_client_start(s_client);
-
-    xTaskCreate(print_stats, "print_stats", 3072, NULL, 5, NULL);
+    esp_err_t err = esp_mqtt_client_start(s_client);
+    if(err != 0){
+        ESP_LOGW(TAG, "Failed to connect to MQTT broker %d", err);
+    } else {
+        mqtt_app_running = true;
+    }
 }

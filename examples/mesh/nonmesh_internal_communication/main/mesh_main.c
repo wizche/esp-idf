@@ -11,6 +11,7 @@
 #include <esp_console.h>
 #include <lwip/inet.h>
 #include <string.h>
+#include <esp_tls.h>
 #include "esp_wifi.h"
 #include "esp_system.h"
 #include "esp_event.h"
@@ -20,7 +21,7 @@
 #include "config.h"
 
 /*******************************************************
- *                Macros
+ *                Externs
  *******************************************************/
 
 /*******************************************************
@@ -333,6 +334,7 @@ void ip_event_handler(void *arg, esp_event_base_t event_base,
         esp_netif_dhcps_start(netif_ap);
         ESP_LOGI(MESH_TAG, "[NODE] DHCP Server for network " IPSTR " on AP started!", IP2STR(&g_nonmesh_netif_subnet_ip.ip));
     }
+    mqtt_app_start();
 }
 
 
@@ -397,8 +399,6 @@ void app_main(void) {
 
     //esp_log_level_set("mesh_hexdump", ESP_LOG_VERBOSE);
     //esp_log_level_set("mesh_main", ESP_LOG_INFO);
-
-    mqtt_app_start();
 
     // start console REPL
     ESP_ERROR_CHECK(esp_console_start_repl(s_repl));
