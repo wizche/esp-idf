@@ -209,6 +209,10 @@ static esp_err_t mesh_netif_transmit_from_node_sta(void *h, void *buffer, size_t
     mesh_data_t data;
     ESP_LOGI(TAG, "Sending to root, dest addr: " MACSTR ", size: %d" ,MAC2STR((uint8_t*)buffer), len);
     data.data = buffer;
+    if(len >= MESH_MPS){
+        ESP_LOGW(TAG, "We cant send a packet bigger then %d, packet is %d", MESH_MPS, len);
+        return ESP_OK;
+    }
     data.size = len;
     data.proto = MESH_PROTO_AP; // Node's station transmits data to root's AP
     data.tos = MESH_TOS_P2P;
@@ -530,8 +534,10 @@ void enable_pnat_callback(void* arg){
         ESP_LOGI(TAG, "Enabling NAT on AP interface");
         ip_napt_enable(g_nonmesh_netif_subnet_ip.ip.addr, 1);
         // TODO: same as the other adjust_mtu todo, it still generate ESP_ERR_MESH_ARGUMENT in some cases
-        // const char name[] = {'a', 'p'};
-        // adjust_mtu(MESH_MPS, name);
+        //const char name[] = {'a', 'p'};
+        //adjust_mtu(1400, name);
+        //const char name2[] = {'s', 't'};
+        //adjust_mtu(1400, name2);
     }
 }
 

@@ -10,6 +10,7 @@
 #include <esp_console.h>
 #include <lwip/lwip_napt.h>
 #include <lwip/netif.h>
+#include <esp_http_client.h>
 #include "esp_wifi.h"
 #include "esp_system.h"
 #include "esp_event.h"
@@ -18,6 +19,7 @@
 #include "nvs_flash.h"
 #include "mesh_netif.h"
 #include "config.h"
+#include "iperf.h"
 
 /*******************************************************
  *                Macros
@@ -43,6 +45,8 @@ void mesh_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
 void register_ap_command();
 void configure_ap();
 
+void register_curl_command();
+
 void ip_event_handler(void *arg, esp_event_base_t event_base,
                       int32_t event_id, void *event_data) {
     ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
@@ -65,7 +69,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
         ESP_LOGI(MESH_TAG, "station " MACSTR " join, AID=%d",
                  MAC2STR(event->mac), event->aid);
-        configure_ap();
+        //configure_ap();
     } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
         ESP_LOGI(MESH_TAG, "station " MACSTR " leave, AID=%d",
@@ -202,6 +206,7 @@ void app_main(void) {
     register_ping_command();
     register_ap_command();
     register_log_command();
+    register_curl_command();
 
     //esp_log_level_set("mesh_hexdump", ESP_LOG_VERBOSE);
     esp_log_level_set("mesh_main", ESP_LOG_INFO);
@@ -210,4 +215,54 @@ void app_main(void) {
     mqtt_app_start();
     // start console REPL
     ESP_ERROR_CHECK(esp_console_start_repl(s_repl));
+}
+
+int send_request(int argc, char* argv[]) {
+    iperf_cfg_t cfg;
+    memset(&cfg, 0, sizeof(cfg));
+    cfg.type = IPERF_IP_TYPE_IPV4;
+    cfg.destination_ip4 = esp_ip4addr_aton("192.168.1.107");
+    cfg.flag |= IPERF_FLAG_CLIENT;
+    cfg.flag |= IPERF_FLAG_TCP;
+    cfg.sport = IPERF_DEFAULT_PORT;
+    cfg.dport = IPERF_DEFAULT_PORT;
+    cfg.interval = IPERF_DEFAULT_INTERVAL;
+    cfg.time = IPERF_DEFAULT_TIME;
+    iperf_start(&cfg);
+    /*
+    char local_response_buffer[256] = {0};
+    esp_http_client_config_t config = {
+            .host = "httpbin.org",
+            .path = "/get",
+            .query = "esp",
+            .user_data = local_response_buffer,        // Pass address of local buffer to get response
+            .disable_auto_redirect = true,
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    ESP_LOGI(MESH_TAG, "Initialized HTTP client");
+    // GET
+    esp_err_t err = esp_http_client_perform(client);
+    ESP_LOGI(MESH_TAG, "Performed HTTP client request");
+    if (err == ESP_OK) {
+        ESP_LOGI(MESH_TAG, "HTTP GET Status = %d, content_length = %lld, output=%s",
+                 esp_http_client_get_status_code(client),
+                 esp_http_client_get_content_length(client),
+                 local_response_buffer);
+    } else {
+        ESP_LOGE(MESH_TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
+    }
+    ESP_LOG_BUFFER_HEX(MESH_TAG, local_response_buffer, strlen(local_response_buffer));
+    esp_http_client_cleanup(client);
+     */
+    return 0;
+}
+
+void register_curl_command() {
+    esp_console_cmd_t ap_command = {
+            .command = "curl",
+            .help = "Send HTTP request",
+            .func = &send_request
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&ap_command));
+
 }

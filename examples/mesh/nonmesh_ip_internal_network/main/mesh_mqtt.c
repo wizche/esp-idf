@@ -18,6 +18,7 @@ static const char *TAG = "mesh_mqtt";
 static esp_mqtt_client_handle_t s_client = NULL;
 
 static bool mqtt_app_running = false;
+static bool mqtt_app_task_running = false;
 
 static void print_stats(void *args);
 static char *build_json_message();
@@ -26,7 +27,9 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-            xTaskCreate(print_stats, "print_stats", 3072, NULL, 5, NULL);
+            if(!mqtt_app_task_running){
+                xTaskCreate(print_stats, "print_stats", 3072, NULL, 5, NULL);
+            }
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -198,6 +201,7 @@ static char *build_json_message() {
 }
 
 static void print_stats(void *args) {
+    mqtt_app_task_running = true;
     while (1) {
         uint8_t apmac[MAC_ADDR_LEN];
         uint8_t stamac[MAC_ADDR_LEN];
@@ -212,7 +216,7 @@ static void print_stats(void *args) {
         char *json = build_json_message();
         mqtt_app_publish(TOPIC, json);
         free(json);
-        vTaskDelay(2000 / portTICK_RATE_MS);
+        vTaskDelay(3000 / portTICK_RATE_MS);
     }
 }
 
