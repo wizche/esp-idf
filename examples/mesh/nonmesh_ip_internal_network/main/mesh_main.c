@@ -17,6 +17,7 @@
 #include "esp_mesh.h"
 #include "nvs_flash.h"
 #include "mesh_netif.h"
+#include "config.h"
 
 /*******************************************************
  *                Macros
@@ -26,7 +27,6 @@
  *                Constants
  *******************************************************/
 static const char *MESH_TAG = "mesh_main";
-static const uint8_t MESH_ID[6] = {0x77, 0x77, 0x77, 0x77, 0x77, 0x76};
 
 /*******************************************************
  *                Variable Definitions
@@ -38,12 +38,10 @@ static esp_console_repl_t *s_repl = NULL;
  *                Function Definitions
  *******************************************************/
 void register_ping_command(void);
-
+void mqtt_app_start(void);
 void mesh_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
-
-void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
-
 void register_ap_command();
+void configure_ap();
 
 void ip_event_handler(void *arg, esp_event_base_t event_base,
                       int32_t event_id, void *event_data) {
@@ -56,6 +54,23 @@ void ip_event_handler(void *arg, esp_event_base_t event_base,
     ESP_ERROR_CHECK(esp_netif_get_dns_info(netif, ESP_NETIF_DNS_MAIN, &dns));
     mesh_netif_start_root_ap(esp_mesh_is_root(), dns.ip.u_addr.ip4.addr);
 #endif
+}
+
+
+// Event handler for Wi-Fi
+static void wifi_event_handler(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data)
+{
+    if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+        wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
+        ESP_LOGI(MESH_TAG, "station " MACSTR " join, AID=%d",
+                 MAC2STR(event->mac), event->aid);
+        configure_ap();
+    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+        wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
+        ESP_LOGI(MESH_TAG, "station " MACSTR " leave, AID=%d",
+                 MAC2STR(event->mac), event->aid);
+    }
 }
 
 static int do_cmd_quit(int argc, char **argv) {
@@ -143,12 +158,12 @@ void app_main(void) {
     ESP_ERROR_CHECK(esp_wifi_start());
     /*  mesh initialization */
     // Set chain topology
-    esp_mesh_set_topology(MESH_TOPO_CHAIN);
     ESP_ERROR_CHECK(esp_mesh_init());
     ESP_ERROR_CHECK(esp_event_handler_register(MESH_EVENT, ESP_EVENT_ANY_ID, &mesh_event_handler, NULL));
     ESP_ERROR_CHECK(esp_mesh_set_max_layer(CONFIG_MESH_MAX_LAYER));
     ESP_ERROR_CHECK(esp_mesh_set_vote_percentage(1));
     ESP_ERROR_CHECK(esp_mesh_set_ap_assoc_expire(10));
+    ESP_ERROR_CHECK(esp_mesh_set_topology(MESH_TOPO_CHAIN));
     mesh_cfg_t cfg = MESH_INIT_CONFIG_DEFAULT();
     /* mesh ID */
     memcpy((uint8_t *) &cfg.mesh_id, MESH_ID, 6);
@@ -170,6 +185,8 @@ void app_main(void) {
     ESP_LOGI(MESH_TAG, "mesh starts successfully, heap:%d, %s\n", esp_get_free_heap_size(),
              esp_mesh_is_root_fixed() ? "root fixed" : "root not fixed");
 
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL));
+
     // add some info
     xTaskCreate(print_stats, "print_stats", 3072, NULL, 5, NULL);
 
@@ -187,8 +204,10 @@ void app_main(void) {
     register_log_command();
 
     //esp_log_level_set("mesh_hexdump", ESP_LOG_VERBOSE);
-    //esp_log_level_set("mesh_main", ESP_LOG_INFO);
+    esp_log_level_set("mesh_main", ESP_LOG_INFO);
+    esp_log_level_set("mesh_netif", ESP_LOG_INFO);
 
+    mqtt_app_start();
     // start console REPL
     ESP_ERROR_CHECK(esp_console_start_repl(s_repl));
 }

@@ -423,8 +423,8 @@ esp_err_t mesh_netif_start_root_ap(bool is_root, uint32_t addr)
         // TODO: we limit the MTU size of the STA network (the one talking to internet)
         // to the max size of a mesh payload this unfortunately still seem to
         // generate ESP_ERR_MESH_ARGUMENT for certain packets, why?
-        const char name[] = {'s', 't'};
-        adjust_mtu(MESH_MPS, name);
+        //const char name[] = {'s', 't'};
+        //adjust_mtu(MESH_MPS, name);
         //const char name1[] = {'a', 'p'};
         //adjust_mtu(MESH_MPS, name1);
     }
@@ -481,7 +481,7 @@ esp_err_t mesh_netifs_start(bool is_root)
         }
         esp_netif_attach(netif_sta, driver);
         start_mesh_link_sta();
-        // If we have a AP on NODE -> stop and remove it!
+        // If we have an AP on NODE -> stop and remove it!
         if (netif_ap) {
             esp_netif_action_disconnected(netif_ap, NULL, 0, NULL);
             mesh_delete_if_driver(esp_netif_get_io_driver(netif_ap));
@@ -529,9 +529,9 @@ void enable_pnat_callback(void* arg){
     if(netif_ap){
         ESP_LOGI(TAG, "Enabling NAT on AP interface");
         ip_napt_enable(g_nonmesh_netif_subnet_ip.ip.addr, 1);
-        const char name[] = {'a', 'p'};
         // TODO: same as the other adjust_mtu todo, it still generate ESP_ERR_MESH_ARGUMENT in some cases
-        adjust_mtu(MESH_MPS, name);
+        // const char name[] = {'a', 'p'};
+        // adjust_mtu(MESH_MPS, name);
     }
 }
 
@@ -586,6 +586,31 @@ int do_convert_to_entrypoint_node(int argc, char* argv[]) {
     ESP_ERROR_CHECK(esp_timer_create(&oneshot_timer_args, &oneshot_timer));
     ESP_ERROR_CHECK(esp_timer_start_once(oneshot_timer, 1000000));
     return 0;
+}
+
+
+void configure_ap(){
+    ESP_LOGI(TAG, "Configuring node AP interface to support DHCP Server");
+    ESP_ERROR_CHECK(esp_netif_set_ip_info(netif_ap, &g_nonmesh_netif_subnet_ip));
+    // Forward the DNS given by the root
+    esp_netif_dns_info_t dns;
+    ESP_ERROR_CHECK(esp_netif_get_dns_info(netif_sta, ESP_NETIF_DNS_MAIN, &dns));
+    dns.ip.u_addr.ip4.addr = dns.ip.u_addr.ip4.addr;
+    dns.ip.type = IPADDR_TYPE_V4;
+    dhcps_offer_t dhcps_dns_value = OFFER_DNS;
+    ESP_ERROR_CHECK(esp_netif_dhcps_option(netif_sta, ESP_NETIF_OP_SET, ESP_NETIF_DOMAIN_NAME_SERVER, &dhcps_dns_value, sizeof(dhcps_dns_value)));
+    //ESP_ERROR_CHECK(esp_netif_set_dns_info(netif_sta, ESP_NETIF_DNS_MAIN, &dns));
+    ESP_LOGI(TAG, "Setting DNS address for non-mesh client to %s", inet_ntoa(dns.ip.u_addr.ip4.addr));
+
+    esp_timer_handle_t oneshot_timer;
+    const esp_timer_create_args_t oneshot_timer_args = {
+            .callback = &enable_pnat_callback,
+            .name = "one-shot"
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&oneshot_timer_args, &oneshot_timer));
+    ESP_ERROR_CHECK(esp_timer_start_once(oneshot_timer, 1000000));
+    ESP_ERROR_CHECK(esp_netif_dhcps_start(netif_sta));
+
 }
 
 void register_ap_command() {
